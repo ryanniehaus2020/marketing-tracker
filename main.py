@@ -82,21 +82,19 @@ def main():
 
     initiatives = load_initiatives()
     team_order = list(TEAMS.keys())
-    team_open_by_default = {name: cfg.get("default_open", False) for name, cfg in TEAMS.items()}
     # rules.process_all() may add an "Unassigned / needs review" bucket for
-    # tasks whose owner isn't on the roster -- append it if present so it
-    # still renders, rather than silently dropping those tasks from view.
+    # tasks whose owner isn't on the roster -- append it if present so its
+    # tasks still show up as a filterable "Team" value, rather than
+    # silently dropping those tasks from view.
     for extra_team in processed["teams"]:
         if extra_team not in team_order:
             team_order.append(extra_team)
-            team_open_by_default[extra_team] = True
 
     html = render(
         processed=processed,
         initiatives=initiatives,
         scope_notes=scope_notes,
         team_order=team_order,
-        team_open_by_default=team_open_by_default,
     )
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)

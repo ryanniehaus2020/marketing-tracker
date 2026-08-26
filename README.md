@@ -2,9 +2,9 @@
 
 A daily-refreshing dashboard of what's happening across the Degreed
 marketing team in the next 7 days: outward-facing activity for the
-team's 3 biggest initiatives, plus a team-by-team task table pulled from
-Asana, Jira, Confluence, HubSpot, and a Google Sheet. Read-only -- it
-reflects those tools, never edits them.
+team's 3 biggest initiatives, plus one filterable/sortable task table
+across all teams, pulled from Asana, Jira, Confluence, HubSpot, and a
+Google Sheet. Read-only -- it reflects those tools, never edits them.
 
 This repo is a working scaffold, not yet wired to real data. Verified
 end-to-end in `--mock` mode; each real API integration is written but
@@ -93,10 +93,13 @@ python3 main.py --sources asana
   *why* something changed, only *that* it did.
 - **`render.py` + `templates/tracker.html.jinja2`** -- rebuilds the
   original's visual design (navy header, status pill colors, activity
-  type tags, collapsible team sections) from the filtered data. The
-  initiatives section keeps client-side JS to bucket activities into
-  "this week / coming weeks / completed," same as the original
-  artifact.
+  type tags) from the filtered data. The task table is one flat table
+  across all teams with client-side filter dropdowns and sortable
+  column headers (Team, Project/Campaign, Status, Owner, Due Date);
+  default order is due date ascending with missing due dates pinned to
+  the bottom, no matter which column is sorted. The initiatives section
+  keeps client-side JS to bucket activities into "this week / coming
+  weeks / completed," same as the original artifact.
 - **`main.py`** -- orchestrates pull -> filter -> diff -> render ->
   write, one source at a time so a source without credentials yet
   doesn't crash the whole run.

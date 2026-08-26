@@ -66,6 +66,20 @@
   .scope-notes { background: #fdf3d9; border: 1px solid #f0e0ad; border-radius: 12px; padding: 16px 20px; }
   .scope-notes ul { margin: 0; padding-left: 18px; }
   .scope-notes li { margin-bottom: 6px; font-size: 13px; }
+  .table-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .table-filters select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #e3e7ee;
+    background: #fff;
+    color: #1c2333;
+    font-size: 13px;
+  }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable::after { content: "\00a0\21d5"; color: #b7bdc9; font-size: 10px; }
+  th.sortable[data-sort-dir="asc"]::after { content: "\00a0\25b2"; color: #1c2333; }
+  th.sortable[data-sort-dir="desc"]::after { content: "\00a0\25bc"; color: #1c2333; }
+  #task-table-empty { color: #8a92a3; font-style: italic; }
 </style>
 </head>
 <body>
@@ -114,52 +128,29 @@
     {% endfor %}
   </div>
 
-  {% for team_name in team_order %}
   <div class="card">
-    <details {% if team_open_by_default.get(team_name) %}open{% endif %}>
-      <summary>{{ team_name }}</summary>
-      <table>
-        <thead>
-          <tr><th>Task</th><th>Project</th><th>Owner</th><th>Status</th><th>Due</th></tr>
-        </thead>
-        <tbody>
-          {% for task in teams[team_name] %}
-          {% if task.is_empty_state %}
-          <tr class="empty-row"><td colspan="5">{{ task.name }}</td></tr>
-          {% else %}
-          <tr>
-            <td>
-              {% if task.source_url %}<a href="{{ task.source_url }}" target="_blank" rel="noopener">{{ task.name }}</a>{% else %}{{ task.name }}{% endif %}
-            </td>
-            <td>{{ task.project_tag or "—" }}</td>
-            <td>
-              {% if task.is_missing and not task.owner %}
-                <span class="pill missing-pill">Missing{% if task.missing_note %} — {{ task.missing_note }}{% endif %}</span>
-              {% else %}
-                {{ task.owner or "—" }}
-              {% endif %}
-            </td>
-            <td>
-              {% set colors = task.status | status_colors %}
-              <span class="pill" style="background:{{ colors[0] }};color:{{ colors[1] }};">{{ task.status or "Unknown" }}</span>
-            </td>
-            <td>
-              {% if not task.due_date %}
-                <span class="pill missing-pill">Missing{% if task.missing_note %} — {{ task.missing_note }}{% endif %}</span>
-              {% elif task.is_overdue %}
-                <span class="overdue">{{ task.due_date }} (overdue)</span>
-              {% else %}
-                {{ task.due_date }}
-              {% endif %}
-            </td>
-          </tr>
-          {% endif %}
-          {% endfor %}
-        </tbody>
-      </table>
-    </details>
+    <h2>Tasks</h2>
+    <div class="table-filters">
+      <select id="filter-team"><option value="">All teams</option></select>
+      <select id="filter-project_tag"><option value="">All projects/campaigns</option></select>
+      <select id="filter-status"><option value="">All statuses</option></select>
+      <select id="filter-owner"><option value="">All owners</option></select>
+      <select id="filter-due_date"><option value="">All due dates</option></select>
+    </div>
+    <table id="task-table">
+      <thead>
+        <tr>
+          <th>Tasks</th>
+          <th class="sortable" data-key="team">Team</th>
+          <th class="sortable" data-key="project_tag">Project/Campaign</th>
+          <th class="sortable" data-key="status">Status</th>
+          <th class="sortable" data-key="owner">Owner</th>
+          <th class="sortable" data-key="due_date" data-sort-dir="asc">Due Date</th>
+        </tr>
+      </thead>
+      <tbody id="task-table-body"></tbody>
+    </table>
   </div>
-  {% endfor %}
 
   <div class="scope-notes">
     <h2>Scope notes for this refresh</h2>
@@ -213,6 +204,116 @@
   document.getElementById("strip-items").innerHTML =
     stripItems.map(a => activityRowHtml(a, a.initiative)).join("") ||
     "<p style='color:#8a92a3;font-size:13px;'>Nothing in the combined timeline this week.</p>";
+</script>
+
+<script>
+  // Task table: one flat, filterable/sortable table across all teams.
+  // `rows` arrives already sorted by due date ascending with missing due
+  // dates pushed to the end (rules.sort_key) -- that's also this table's
+  // default view, so no initial sort pass is needed here.
+  const TASK_TABLE = {{ task_table_json | safe }};
+  const TASK_ROWS = TASK_TABLE.rows;
+  const TASK_TEAM_ORDER = TASK_TABLE.team_order;
+
+  const FILTER_COLUMNS = ["team", "project_tag", "status", "owner", "due_date"];
+  const filters = { team: "", project_tag: "", status: "", owner: "", due_date: "" };
+  let sortKey = "due_date";
+  let sortDir = 1;
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  function populateFilter(column) {
+    const select = document.getElementById(`filter-${column}`);
+    const present = new Set(TASK_ROWS.map((r) => r[column] || "Missing"));
+    let values;
+    if (column === "team") {
+      // Roster order, not alphabetical -- matches the rest of the tracker.
+      values = TASK_TEAM_ORDER.filter((t) => present.has(t));
+    } else {
+      values = Array.from(present).filter((v) => v !== "Missing").sort((a, b) => a.localeCompare(b));
+    }
+    if (present.has("Missing")) values.push("Missing");
+    values.forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      select.appendChild(opt);
+    });
+    select.addEventListener("change", () => {
+      filters[column] = select.value;
+      renderTaskTable();
+    });
+  }
+
+  function matchesFilters(row) {
+    return FILTER_COLUMNS.every((column) => {
+      const active = filters[column];
+      if (!active) return true;
+      return (row[column] || "Missing") === active;
+    });
+  }
+
+  function compareRows(a, b) {
+    const av = a[sortKey], bv = b[sortKey];
+    const aMissing = av === null || av === undefined || av === "";
+    const bMissing = bv === null || bv === undefined || bv === "";
+    // Missing values sort last regardless of direction/column -- "Keep
+    // Missing at the bottom" applies whichever column is currently sorted.
+    if (aMissing && bMissing) return 0;
+    if (aMissing) return 1;
+    if (bMissing) return -1;
+    if (sortKey === "due_date") return (av < bv ? -1 : av > bv ? 1 : 0) * sortDir;
+    return String(av).localeCompare(String(bv)) * sortDir;
+  }
+
+  function taskRowHtml(row) {
+    const taskCell = row.source_url
+      ? `<a href="${escapeHtml(row.source_url)}" target="_blank" rel="noopener">${escapeHtml(row.name)}</a>`
+      : escapeHtml(row.name);
+    const missingPill = `<span class="pill missing-pill">Missing${row.missing_note ? " — " + escapeHtml(row.missing_note) : ""}</span>`;
+    const ownerCell = (row.is_missing && !row.owner) ? missingPill : escapeHtml(row.owner || "—");
+    const dueCell = !row.due_date
+      ? missingPill
+      : row.is_overdue
+        ? `<span class="overdue">${escapeHtml(row.due_date)} (overdue)</span>`
+        : escapeHtml(row.due_date);
+    return `<tr>
+      <td>${taskCell}</td>
+      <td>${escapeHtml(row.team || "—")}</td>
+      <td>${escapeHtml(row.project_tag || "—")}</td>
+      <td><span class="pill" style="background:${row.status_bg};color:${row.status_fg};">${escapeHtml(row.status || "Unknown")}</span></td>
+      <td>${ownerCell}</td>
+      <td>${dueCell}</td>
+    </tr>`;
+  }
+
+  function renderTaskTable() {
+    const rows = TASK_ROWS.filter(matchesFilters).slice().sort(compareRows);
+    document.getElementById("task-table-body").innerHTML =
+      rows.map(taskRowHtml).join("") ||
+      `<tr><td colspan="6" id="task-table-empty">No tasks match these filters.</td></tr>`;
+  }
+
+  document.querySelectorAll("#task-table th.sortable").forEach((th) => {
+    th.addEventListener("click", () => {
+      if (sortKey === th.dataset.key) {
+        sortDir *= -1;
+      } else {
+        sortKey = th.dataset.key;
+        sortDir = 1;
+      }
+      document.querySelectorAll("#task-table th.sortable").forEach((h) => h.removeAttribute("data-sort-dir"));
+      th.setAttribute("data-sort-dir", sortDir === 1 ? "asc" : "desc");
+      renderTaskTable();
+    });
+  });
+
+  FILTER_COLUMNS.forEach(populateFilter);
+  renderTaskTable();
 </script>
 
 </body>

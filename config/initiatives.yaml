@@ -26,9 +26,14 @@ initiatives:
   - id: degreed-ai-product-launch
     name: "Degreed.ai Product Launch"
     key_date: "GA Oct 6, 2026"
+    note: "Two sources of truth for this initiative's tasks -- the Asana project and the Launch tracker sheet."
     links:
       - label: "Messaging doc"
         url: "https://docs.google.com/document/d/REPLACE_ME"
+      - label: "Asana project"
+        url: "https://app.asana.com/1/1199943304774115/project/1217876918438817/list"
+      - label: "Launch tracker (Google Sheet)"
+        url: "https://docs.google.com/spreadsheets/d/1rBGOEOAMml6ut6sUEsh7h4FUnqcaZgXSmOT9uzBiFc8/edit?gid=0#gid=0"
     activities:
       - date: "2026-09-29"
         type: BLOG

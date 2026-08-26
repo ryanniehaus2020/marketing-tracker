@@ -196,7 +196,22 @@ def process_all(raw_tasks: list[dict], previous_snapshot: dict | None = None) ->
         teams.setdefault("Unassigned / needs review", [])
         teams["Unassigned / needs review"].extend(unassigned_or_unrostered)
 
-    return {"teams": teams, "raw_tasks": raw_tasks}
+    # Flat, single-table view across all teams (task view) -- same tasks as
+    # `teams` above, minus the per-person empty-state filler rows (they
+    # don't carry due dates/owners, so they don't belong in a sortable/
+    # filterable table). Tagged with which team each task landed in so
+    # "Team" can be a column/filter instead of a section header. Re-sort
+    # after flattening since dict insertion order (team-by-team) would
+    # otherwise clobber the due-date order within each team.
+    task_table = [
+        dict(task, team=team_name)
+        for team_name, rows in teams.items()
+        for task in rows
+        if not task.get("is_empty_state")
+    ]
+    task_table.sort(key=sort_key)
+
+    return {"teams": teams, "raw_tasks": raw_tasks, "task_table": task_table}
 
 
 def _empty_state_row(text: str) -> dict:
