@@ -12,6 +12,7 @@ import argparse
 import os
 from datetime import date
 
+import requests
 import yaml
 from dotenv import load_dotenv
 
@@ -50,6 +51,12 @@ def pull_all(mock: bool, only_sources: list[str] | None) -> list[dict]:
             # rather than crashing the whole run. Milestone 1 only needs
             # Asana working; the rest will raise this until configured.
             print(f"[{name}] skipped: {exc}")
+        except requests.exceptions.RequestException as exc:
+            # A live source's own API hiccupped (timeout, 5xx, rate limit,
+            # bad auth) -- skip just that source rather than failing the
+            # whole day's refresh. Other sources' tasks still make it into
+            # the tracker; this one shows nothing new until the next run.
+            print(f"[{name}] skipped due to API error: {exc}")
     return tasks
 
 

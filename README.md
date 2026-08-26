@@ -15,7 +15,6 @@ untested against live credentials.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-pip install beautifulsoup4   # only needed for the real Confluence source
 python3 main.py --mock
 open output/tracker.html     # or just open it in a browser
 ```
