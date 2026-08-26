@@ -137,13 +137,56 @@ DEDUP_PRIORITY = [
     },
     {
         "label": "Individual contributor boards",
-        # Personal to-do boards are named "<first name> — <bucket>" (e.g.
-        # "Lisa — This Week", "Lisa — To Do", "Lisa — Waiting On Others")
-        # -- match on the person's first name rather than a fixed bucket
-        # list, since the bucket names vary per person and over time.
-        "personal_board_prefixes": True,
+        # Verified against live Asana (2026-08-26): Lisa's personal board
+        # is ONE project -- "Lisa To Do's" (gid 1217792928253659) -- with
+        # "This Week" / "To Do" / "Waiting On Others" as *sections* inside
+        # it, not separate projects named "Lisa — This Week" etc. (that
+        # em-dash form was only ever this tracker's own display text).
+        # Add other ICs' personal boards here once confirmed the same way
+        # -- don't guess a naming convention from one example.
+        "project_names": [
+            "Lisa To Do's",
+        ],
     },
 ]
+
+# --- Known real Asana/Atlassian/Drive IDs (verified 2026-08-26) -----------
+# Looked up live via the Asana/Atlassian/Google Drive connectors so the
+# daily refresh doesn't have to re-search by name every run (and risk
+# matching the wrong same-named object, e.g. "Marketing Operations" vs.
+# "Marketing Operations Master Dashboard", or "Event Projects" vs. its
+# 2019/2020/2021 archived namesakes). Re-verify and update if a board gets
+# renamed, archived, or replaced.
+ASANA_WORKSPACE_GID = "1199943304774115"
+
+ASANA_PROJECT_GIDS = {
+    "Web Marketing Requests": "1202966122105252",
+    "Content Calendar": "1203158713461129",
+    "All Creative Projects": "1200519962061957",
+    "Marketing Operations": "1217800138766272",
+    "Paid Advertising + Media": "1203665373615112",
+    "Event Projects": "1201483003070040",
+    "Email & Automation Management": "1200025860801880",
+    "Lisa To Do's": "1217792928253659",
+}
+
+ASANA_PORTFOLIO_GIDS = {
+    "FY27 Marketing Initiatives": "1213726795315426",
+    "Content Marketing": "1212892150691924",
+}
+
+JIRA_PMM_PROJECT_KEY = "PMM"
+ATLASSIAN_CLOUD_ID = "151636d7-9099-4803-a108-4f053f36c9fe"
+CONFLUENCE_MARKETING_OPS_ROADMAP_PAGE_ID = "8566735021"  # MAR space
+
+# Google Drive file IDs for documents this tracker's initiatives reference.
+REFERENCED_DOCUMENT_IDS = {
+    "AI-Powered Revolution messaging doc": "1dISbXEU8-_v7tFgLXor5cCUjugrhW7v6a716_rPi6VU",
+    "Degreed.ai launch tracker (sheet)": "1rBGOEOAMml6ut6sUEsh7h4FUnqcaZgXSmOT9uzBiFc8",
+    "Vision 2026 comms plan": "1ZlpbCrv7BOPtQNVrX8rQ6NtCrRZuHKzuv_5d6zi1k4I",
+    "AI Roadmap FY27 (sheet)": "1d2iH1D2jXcW-jfkhLLBAJHoKeNvHceOZie3cLKhmF0E",
+    "Website Roadmap working doc": "16MTqGAve79Ij4CIBuEHjKZVu2kuHUfk1rfT-YMPvlCU",
+}
 
 # --- Active-work statuses --------------------------------------------------
 # Statuses that force a task into the visibility window regardless of due

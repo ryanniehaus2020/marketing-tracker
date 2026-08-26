@@ -7,7 +7,6 @@ against the reference tracker -- keep it isolated from the source
 modules (which should only ever normalize, never filter or judge).
 """
 
-import os
 from datetime import date, datetime, timedelta
 
 from config.roster import (
@@ -29,20 +28,27 @@ def _parse_date(value: str | None) -> date | None:
         return None
 
 
-def resolve_project_tag(all_project_tags: list[str]) -> str | None:
+def resolve_project_tag(all_project_tags: list[str], portfolio_members: dict[str, list[str]] | None = None) -> str | None:
     """Pick ONE project tag per the fixed priority order in
     config.roster.DEDUP_PRIORITY. Falls back to the first tag if nothing
-    in the priority list matches (better to show something than nothing)."""
+    in the priority list matches (better to show something than nothing).
+
+    portfolio_members maps a tier's "label" to the list of project names
+    currently in that Asana portfolio -- fetched live each run (portfolio
+    membership changes as campaigns get added/retired), since a project's
+    *name* alone can't tell you which portfolio it belongs to. Omit it
+    (or pass {}) to skip the portfolio tiers entirely, e.g. in --mock mode
+    where there's no live portfolio to query."""
     if not all_project_tags:
         return None
 
+    portfolio_members = portfolio_members or {}
     for tier in DEDUP_PRIORITY:
         if "portfolio_env" in tier:
-            portfolio_gid = os.environ.get(tier["portfolio_env"])
-            # Portfolio membership isn't knowable from project *names* alone --
-            # source modules should attach the portfolio's project name to
-            # all_project_tags if a task is in that portfolio. This checks by
-            # name for now; swap for a real gid-membership check once wired up.
+            members = portfolio_members.get(tier["label"], [])
+            for tag in all_project_tags:
+                if tag in members:
+                    return tag
             continue
         if "project_names" in tier:
             for tag in all_project_tags:
@@ -132,7 +138,7 @@ def filter_hubspot_new_only(hubspot_tasks: list[dict], previous_snapshot: dict |
     ]
 
 
-def process_all(raw_tasks: list[dict], previous_snapshot: dict | None = None) -> dict:
+def process_all(raw_tasks: list[dict], previous_snapshot: dict | None = None, portfolio_members: dict[str, list[str]] | None = None) -> dict:
     """Full pipeline: resolve project tags -> apply RACI overrides ->
     filter to visibility window -> annotate overdue/missing -> group by
     team -> sort -> generate empty-state rows.
@@ -152,7 +158,7 @@ def process_all(raw_tasks: list[dict], previous_snapshot: dict | None = None) ->
     processed = []
     for task in other_tasks + hubspot_tasks:
         t = dict(task)
-        t["project_tag"] = resolve_project_tag(t.get("all_project_tags") or [])
+        t["project_tag"] = resolve_project_tag(t.get("all_project_tags") or [], portfolio_members)
         t = apply_owner_override(t)
 
         if not in_visibility_window(t, today):
