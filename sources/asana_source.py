@@ -1,0 +1,138 @@
+"""
+Asana source -- Milestone 1 target.
+
+Feeds: Growth team tasks (Web Marketing Requests, Website Roadmap, Lisa
+Harding's personal to-do boards, Email & Automation Management), plus
+Content & Brand and Events boards once you extend PROJECT_GIDS below.
+
+Real API docs: https://developers.asana.com/reference/rest-api-reference
+
+Setup:
+  1. Create a Personal Access Token in Asana (My Profile Settings > Apps
+     > Manage Developer Apps) and put it in ASANA_ACCESS_TOKEN.
+  2. Find your workspace gid: GET /workspaces, put it in ASANA_WORKSPACE_GID.
+  3. Fill in PROJECT_GIDS below with the real gids for each board (find
+     them in the Asana URL when viewing a project, or via GET /projects).
+"""
+
+import os
+from datetime import date
+
+import requests
+
+from .base import NormalizedTask, require_env
+
+ASANA_API_BASE = "https://app.asana.com/api/1.0"
+
+# Map a human-readable board name -> its Asana project gid.
+# Fill these in once you have real access. Milestone 1 only needs the
+# Growth-team boards populated; leave the rest blank until you extend.
+PROJECT_GIDS = {
+    "Web Marketing Requests": "",
+    "Website Roadmap": "",
+    "Lisa — This Week": "",  # Lisa Harding's personal to-do board
+    "Email & Automation Management": "",
+    "Content Calendar": "",  # Content & Brand
+    "All Creative Projects": "",  # Content & Brand
+    "Event Projects": "",  # Events
+}
+
+TASK_FIELDS = "name,completed,due_on,assignee.name,memberships.project.name,permalink_url"
+
+
+def _fetch_project_tasks(project_gid: str, project_name: str, token: str) -> list[dict]:
+    resp = requests.get(
+        f"{ASANA_API_BASE}/projects/{project_gid}/tasks",
+        headers={"Authorization": f"Bearer {token}"},
+        params={"opt_fields": TASK_FIELDS, "completed_since": "now"},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json().get("data", [])
+
+
+def _status_from_task(raw_task: dict) -> str:
+    """Asana has no built-in 'status' field the way Jira does -- teams
+    usually track it via a custom field or a section name. Adjust this to
+    read whatever your team actually uses (a custom field gid, or the
+    section the task sits in) once you have real data to look at."""
+    if raw_task.get("completed"):
+        return "Done"
+    # Placeholder default -- replace with a real custom-field / section lookup.
+    return "Queue"
+
+
+def fetch(mock: bool = False) -> list[dict]:
+    if mock:
+        return _mock_tasks()
+
+    require_env(os.environ, "ASANA_ACCESS_TOKEN", "ASANA_WORKSPACE_GID")
+    token = os.environ["ASANA_ACCESS_TOKEN"]
+
+    tasks: list[NormalizedTask] = []
+    for project_name, project_gid in PROJECT_GIDS.items():
+        if not project_gid:
+            continue  # not wired up yet -- skip rather than error
+        for raw in _fetch_project_tasks(project_gid, project_name, token):
+            memberships = raw.get("memberships") or []
+            all_tags = [m["project"]["name"] for m in memberships if m.get("project")]
+            tasks.append(
+                NormalizedTask(
+                    name=raw["name"],
+                    status=_status_from_task(raw),
+                    source="asana",
+                    project_tag=None,  # resolved by rules.py's dedup step
+                    all_project_tags=all_tags or [project_name],
+                    owner=(raw.get("assignee") or {}).get("name"),
+                    due_date=raw.get("due_on"),
+                    source_url=raw.get("permalink_url"),
+                )
+            )
+    return [t.to_dict() for t in tasks]
+
+
+def _mock_tasks() -> list[dict]:
+    """Fixture data for `--mock` runs, shaped to match the reference
+    tracker's Growth team table so you can sanity-check rules.py/render.py
+    before touching real credentials."""
+    today = date.today()
+    return [
+        NormalizedTask(
+            name="Finalize Q4 paid social calendar",
+            status="In Progress",
+            source="asana",
+            all_project_tags=["Web Marketing Requests"],
+            owner="Ryan Niehaus",  # literal Asana assignee -- RACI override applies
+            due_date=str(today.replace(day=min(today.day + 3, 28))),
+            source_url="https://app.asana.com/0/mock/1",
+        ).to_dict(),
+        NormalizedTask(
+            name="Localization needed for a success story",
+            status="Blocked",
+            source="asana",
+            all_project_tags=["Content Calendar"],
+            owner="Camila Santos",
+            due_date=None,  # missing-data case
+            source_url="https://app.asana.com/0/mock/2",
+        ).to_dict(),
+        NormalizedTask(
+            name="Refresh homepage hero for Degreed.ai launch",
+            status="This Week",
+            source="asana",
+            all_project_tags=["Website Roadmap", "Web Marketing Requests"],
+            owner="Dafne Delgado",
+            due_date=str(today.replace(day=min(today.day + 20, 28))),  # far out but active
+            source_url="https://app.asana.com/0/mock/3",
+        ).to_dict(),
+        NormalizedTask(
+            name="Draft nurture email #3",
+            status="Queue",
+            source="asana",
+            all_project_tags=["Email & Automation Management"],
+            owner="Luke Derderian",
+            due_date=str(today.replace(day=min(today.day + 40, 28))),  # out of window, not active
+            source_url="https://app.asana.com/0/mock/4",
+        ).to_dict(),
+        # Tilda Persson intentionally has zero mock tasks to exercise the
+        # empty-state row logic.
+    ]

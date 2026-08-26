@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Marketing Team Tracker</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f6f7fb;
+    color: #1c2333;
+  }
+  header {
+    background: linear-gradient(135deg, #0b1f3a, #132b52);
+    color: #fff;
+    padding: 28px 32px;
+  }
+  header h1 { margin: 0 0 10px; font-size: 22px; font-weight: 700; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+  main { padding: 24px 32px 48px; max-width: 1100px; margin: 0 auto; }
+  .card {
+    background: #fff;
+    border: 1px solid #e3e7ee;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  h2 { font-size: 16px; margin: 0 0 14px; }
+  h3 { font-size: 14px; margin: 0 0 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eef0f4; vertical-align: top; }
+  th { color: #5b6472; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .pill {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .missing-pill { background: #fbe7e4; color: #c0392b; }
+  .overdue { color: #c0392b; font-weight: 600; }
+  .empty-row { color: #8a92a3; font-style: italic; }
+  details { margin-bottom: 12px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 15px; padding: 6px 0; }
+  .activity-tag {
+    color: #fff;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .strip-item { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid #eef0f4; font-size: 13px; }
+  .strip-date { color: #5b6472; width: 90px; flex-shrink: 0; }
+  .initiative-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .initiative-links a { color: #1f5fbf; text-decoration: none; font-size: 12px; margin-right: 10px; }
+  .scope-notes { background: #fdf3d9; border: 1px solid #f0e0ad; border-radius: 12px; padding: 16px 20px; }
+  .scope-notes ul { margin: 0; padding-left: 18px; }
+  .scope-notes li { margin-bottom: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Marketing Team Tracker</h1>
+  <div class="badges">
+    <span class="badge">Last refreshed: {{ last_refreshed }}</span>
+    <span class="badge">{{ cadence_label }}</span>
+    <span class="badge">Window: {{ window_label }}</span>
+  </div>
+</header>
+
+<main>
+
+  <div class="card" id="next-7-days-strip">
+    <h2>Coming up in the next 7 days</h2>
+    <div id="strip-items"></div>
+  </div>
+
+  <div class="card">
+    <h2>Major Marketing Initiatives</h2>
+    {% for initiative in initiatives %}
+    <details open class="initiative" data-initiative-id="{{ initiative.id }}">
+      <summary>
+        <div class="initiative-header">
+          <span>{{ initiative.name }} &mdash; {{ initiative.key_date }}</span>
+        </div>
+      </summary>
+      {% if initiative.note %}<p style="font-size:12px;color:#8a92a3;margin:4px 0 10px;">{{ initiative.note }}</p>{% endif %}
+      {% if initiative.links %}
+      <div class="initiative-links">
+        {% for link in initiative.links %}<a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label }}</a>{% endfor %}
+      </div>
+      {% endif %}
+      <div class="bucket-this-week"></div>
+      <details>
+        <summary>Coming in the coming weeks</summary>
+        <div class="bucket-later"></div>
+      </details>
+      <details>
+        <summary>Completed</summary>
+        <div class="bucket-completed"></div>
+      </details>
+    </details>
+    {% endfor %}
+  </div>
+
+  {% for team_name in team_order %}
+  <div class="card">
+    <details {% if team_open_by_default.get(team_name) %}open{% endif %}>
+      <summary>{{ team_name }}</summary>
+      <table>
+        <thead>
+          <tr><th>Task</th><th>Project</th><th>Owner</th><th>Status</th><th>Due</th></tr>
+        </thead>
+        <tbody>
+          {% for task in teams[team_name] %}
+          {% if task.is_empty_state %}
+          <tr class="empty-row"><td colspan="5">{{ task.name }}</td></tr>
+          {% else %}
+          <tr>
+            <td>
+              {% if task.source_url %}<a href="{{ task.source_url }}" target="_blank" rel="noopener">{{ task.name }}</a>{% else %}{{ task.name }}{% endif %}
+            </td>
+            <td>{{ task.project_tag or "—" }}</td>
+            <td>
+              {% if task.is_missing and not task.owner %}
+                <span class="pill missing-pill">Missing{% if task.missing_note %} — {{ task.missing_note }}{% endif %}</span>
+              {% else %}
+                {{ task.owner or "—" }}
+              {% endif %}
+            </td>
+            <td>
+              {% set colors = task.status | status_colors %}
+              <span class="pill" style="background:{{ colors[0] }};color:{{ colors[1] }};">{{ task.status or "Unknown" }}</span>
+            </td>
+            <td>
+              {% if not task.due_date %}
+                <span class="pill missing-pill">Missing{% if task.missing_note %} — {{ task.missing_note }}{% endif %}</span>
+              {% elif task.is_overdue %}
+                <span class="overdue">{{ task.due_date }} (overdue)</span>
+              {% else %}
+                {{ task.due_date }}
+              {% endif %}
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+  </div>
+  {% endfor %}
+
+  <div class="scope-notes">
+    <h2>Scope notes for this refresh</h2>
+    <ul>
+      {% for note in scope_notes %}<li>{{ note }}</li>{% endfor %}
+    </ul>
+  </div>
+
+</main>
+
+<script>
+  const INITIATIVES = {{ initiatives_json | safe }};
+  const TODAY = new Date("{{ today_iso }}T00:00:00");
+  const ACTIVITY_COLORS = {
+    SOCIAL: "#7c4fd1", EMAIL: "#0f8b8d", BLOG: "#b8860b", NEWSLETTER: "#0f8b8d",
+    WEBSITE: "#4a5568", PR: "#c2477b", CLIP: "#7c4fd1", EVENT: "#a8791a"
+  };
+
+  function daysFromToday(dateStr) {
+    const d = new Date(dateStr + "T00:00:00");
+    return Math.round((d - TODAY) / 86400000);
+  }
+
+  function activityRowHtml(activity, initiativeName) {
+    const color = ACTIVITY_COLORS[activity.type] || "#5b6472";
+    return `<div class="strip-item">
+      <span class="strip-date">${activity.date}</span>
+      <span class="activity-tag" style="background:${color};">${activity.type}</span>
+      <span>${activity.what}${initiativeName ? " — " + initiativeName : ""} <em style="color:#8a92a3;">(${activity.owner})</em></span>
+    </div>`;
+  }
+
+  const stripItems = [];
+
+  INITIATIVES.forEach(initiative => {
+    const el = document.querySelector(`[data-initiative-id="${initiative.id}"]`);
+    if (!el) return;
+    const thisWeek = [], later = [], completed = [];
+    (initiative.activities || []).forEach(a => {
+      const delta = daysFromToday(a.date);
+      if (delta < 0) completed.push(a);
+      else if (delta <= 7) { thisWeek.push(a); stripItems.push({ ...a, initiative: initiative.name }); }
+      else later.push(a);
+    });
+    el.querySelector(".bucket-this-week").innerHTML = thisWeek.map(a => activityRowHtml(a)).join("") || "<p style='color:#8a92a3;font-size:13px;'>Nothing in the next 7 days.</p>";
+    el.querySelector(".bucket-later").innerHTML = later.map(a => activityRowHtml(a)).join("") || "<p style='color:#8a92a3;font-size:13px;'>Nothing further out.</p>";
+    el.querySelector(".bucket-completed").innerHTML = completed.map(a => activityRowHtml(a)).join("") || "<p style='color:#8a92a3;font-size:13px;'>Nothing completed yet.</p>";
+  });
+
+  stripItems.sort((a, b) => a.date.localeCompare(b.date));
+  document.getElementById("strip-items").innerHTML =
+    stripItems.map(a => activityRowHtml(a, a.initiative)).join("") ||
+    "<p style='color:#8a92a3;font-size:13px;'>Nothing in the combined timeline this week.</p>";
+</script>
+
+</body>
+</html>

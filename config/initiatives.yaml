@@ -1,0 +1,69 @@
+# Major Marketing Initiatives -- hand-maintained because these change
+# rarely (a handful of times per quarter, not daily). Each activity's
+# `date` drives the "next week / coming weeks / completed" bucketing at
+# render time -- you don't need to bucket these yourself.
+#
+# type must be one of: SOCIAL, EMAIL, BLOG, NEWSLETTER, WEBSITE, PR, CLIP, EVENT
+
+initiatives:
+  - id: ai-powered-revolution
+    name: "AI-Powered Revolution"
+    key_date: "3-part webinar series"
+    links:
+      - label: "Comms plan"
+        url: "https://docs.google.com/document/d/REPLACE_ME"
+    note: "Dates not locked yet"
+    activities:
+      - date: "2026-09-02"
+        type: EMAIL
+        what: "Webinar 1 invite send"
+        owner: "Luke Derderian"
+      - date: "2026-09-09"
+        type: SOCIAL
+        what: "Webinar 1 promo post"
+        owner: "Dafne Delgado"
+
+  - id: degreed-ai-product-launch
+    name: "Degreed.ai Product Launch"
+    key_date: "GA Oct 6, 2026"
+    links:
+      - label: "Messaging doc"
+        url: "https://docs.google.com/document/d/REPLACE_ME"
+    activities:
+      - date: "2026-09-29"
+        type: BLOG
+        what: "Launch blog post goes live"
+        owner: "Emily Gerson"
+      - date: "2026-10-06"
+        type: PR
+        what: "Press release distribution"
+        owner: "Caroline McCausland"
+      - date: "2026-10-06"
+        type: WEBSITE
+        what: "Product page goes live"
+        owner: "Dafne Delgado"
+
+  - id: vision-2026
+    name: "Vision 2026"
+    key_date: "Live event Oct 14, 2026"
+    links:
+      - label: "Event run-of-show"
+        url: "https://docs.google.com/document/d/REPLACE_ME"
+    note: "Has the most granular activity list -- ~35 dated touches from announcement through post-event recap. Only a starter subset is stubbed here; pull the full list from the current Artifact HTML when migrating."
+    activities:
+      - date: "2026-09-01"
+        type: EMAIL
+        what: "Save-the-date send"
+        owner: "Luke Derderian"
+      - date: "2026-09-15"
+        type: SOCIAL
+        what: "Speaker announcement post"
+        owner: "Camila Santos"
+      - date: "2026-10-14"
+        type: EVENT
+        what: "Vision 2026 live event"
+        owner: "Kristen Beinke"
+      - date: "2026-10-16"
+        type: CLIP
+        what: "Post-event recap video"
+        owner: "Vinni Chu"
