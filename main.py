@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 import diff
 import rules
 from render import render
-from config.roster import TEAMS
+from config.roster import TEAMS, default_owner_for_channel
 from sources import asana_source, jira_source, confluence_source, hubspot_source, sheets_source
 
 SOURCE_MODULES = {
@@ -34,7 +34,17 @@ SOURCE_MODULES = {
 def load_initiatives(path: str = "config/initiatives.yaml") -> list[dict]:
     with open(path) as f:
         data = yaml.safe_load(f)
-    return data.get("initiatives", [])
+    initiatives = data.get("initiatives", [])
+    for initiative in initiatives:
+        for activity in initiative.get("activities", []):
+            # An explicit owner always wins; only fill the gap when one
+            # of the RACI-mapped channels (email/social/website/newsletter)
+            # was entered without an owner yet.
+            if not activity.get("owner"):
+                inferred = default_owner_for_channel(activity.get("type"))
+                if inferred:
+                    activity["owner"] = inferred
+    return initiatives
 
 
 def pull_all(mock: bool, only_sources: list[str] | None) -> list[dict]:

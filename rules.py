@@ -52,6 +52,11 @@ def resolve_project_tag(all_project_tags: list[str]) -> str | None:
             for tag in all_project_tags:
                 if any(tag.endswith(suffix) for suffix in tier["project_name_suffixes"]):
                     return tag
+        if tier.get("personal_board_prefixes"):
+            first_names = {person.split()[0] for person in PERSON_TO_TEAM}
+            for tag in all_project_tags:
+                if any(tag.startswith(f"{name} — ") or tag.startswith(f"{name} - ") for name in first_names):
+                    return tag
 
     return all_project_tags[0]
 
