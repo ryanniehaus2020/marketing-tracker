@@ -17,6 +17,7 @@
     color: #fff;
     padding: 28px 32px;
   }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
   header h1 { margin: 0 0 10px; font-size: 22px; font-weight: 700; }
   .badges { display: flex; gap: 8px; flex-wrap: wrap; }
   .badge {
@@ -26,6 +27,32 @@
     padding: 4px 12px;
     font-size: 12px;
   }
+  #refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  #refresh-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
+  #refresh-btn:disabled { opacity: 0.6; cursor: default; }
+  #refresh-btn svg { transition: transform 0.6s ease; }
+  #refresh-btn.spinning svg { animation: refresh-spin 0.8s linear infinite; }
+  @keyframes refresh-spin { to { transform: rotate(360deg); } }
+  #refresh-status {
+    margin-top: 10px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    max-width: 640px;
+  }
+  #refresh-status ul { margin: 4px 0 0; padding-left: 18px; }
   main { padding: 24px 32px 48px; max-width: 1100px; margin: 0 auto; }
   .card {
     background: #fff;
@@ -71,12 +98,23 @@
 <body>
 
 <header>
-  <h1>Marketing Team Tracker</h1>
-  <div class="badges">
-    <span class="badge">Last refreshed: {{ last_refreshed }}</span>
-    <span class="badge">{{ cadence_label }}</span>
-    <span class="badge">Window: {{ window_label }}</span>
+  <div class="header-top">
+    <div>
+      <h1>Marketing Team Tracker</h1>
+      <div class="badges">
+        <span class="badge" id="last-refreshed-badge">Last refreshed: {{ last_refreshed }}</span>
+        <span class="badge">{{ cadence_label }}</span>
+        <span class="badge">Window: {{ window_label }}</span>
+      </div>
+    </div>
+    <button id="refresh-btn" type="button" title="Pull the latest data straight from Asana, Jira, Confluence, HubSpot, and the AI Roadmap sheet">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M13.65 2.35A7.958 7.958 0 0 0 8 0C3.58 0 0 3.58 0 8s3.58 8 8 8a8.001 8.001 0 0 0 7.75-6h-2.08A6 6 0 1 1 8 2c1.66 0 3.14.69 4.22 1.78L9 7h7V0l-2.35 2.35Z" fill="currentColor"/>
+      </svg>
+      <span id="refresh-btn-label">Refresh from sources</span>
+    </button>
   </div>
+  <div id="refresh-status"></div>
 </header>
 
 <main>
@@ -213,6 +251,115 @@
   document.getElementById("strip-items").innerHTML =
     stripItems.map(a => activityRowHtml(a, a.initiative)).join("") ||
     "<p style='color:#8a92a3;font-size:13px;'>Nothing in the combined timeline this week.</p>";
+
+  // --- Header "Refresh from sources" button --------------------------------
+  // This does a live spot-check against the connected systems directly from
+  // the browser (via the artifact's mcp capability) so anyone viewing the
+  // page can confirm what's currently in Asana/Jira/Confluence/HubSpot/the
+  // AI Roadmap sheet. It intentionally does NOT re-run the dedup/RACI/
+  // 7-day-window rules that rules.py applies -- duplicating that logic in
+  // JS would give it a second place to drift out of sync. The team tables
+  // above stay authoritative from the last scheduled `main.py` run; this is
+  // a quick "is this still current" check, not a replacement for it.
+  const LIVE_SOURCES = {{ live_sources_json | safe }};
+
+  async function checkAsana(mcp, cfg) {
+    const projectEntries = Object.entries(cfg.projects);
+    const counts = await Promise.all(projectEntries.map(async ([name, gid]) => {
+      const result = await mcp.callTool("Asana", "get_tasks", { project: gid, opt_fields: "completed" });
+      const tasks = Array.isArray(result.payload) ? result.payload : (result.payload?.data || []);
+      return `${name}: ${tasks.length}`;
+    }));
+    return `Asana — ${counts.join(", ")}`;
+  }
+
+  async function checkJira(mcp, cfg) {
+    const jql = `project = "${cfg.projectKey}" AND statusCategory != Done`;
+    const result = await mcp.callTool("Atlassian", "searchJiraIssuesUsingJql", {
+      cloudId: cfg.cloudId, jql, maxResults: 100,
+    });
+    const issues = result.payload?.issues || [];
+    return `Jira (${cfg.projectKey}) — ${issues.length} open issue(s)`;
+  }
+
+  async function checkConfluence(mcp, cfg) {
+    const result = await mcp.callTool("Atlassian", "getConfluencePage", {
+      cloudId: cfg.cloudId, pageId: cfg.pageId,
+    });
+    const title = result.payload?.title || "page";
+    return `Confluence — "${title}" fetched OK`;
+  }
+
+  async function checkHubspot(mcp, cfg) {
+    const result = await mcp.callTool("HubSpot", "query_crm_data", {
+      sql: `SELECT hs_object_id FROM ${cfg.objectType} LIMIT 50`,
+    });
+    const rows = result.payload?.rows || result.payload || [];
+    return `HubSpot — ${Array.isArray(rows) ? rows.length : "some"} site page(s) found`;
+  }
+
+  async function checkSheets(mcp, cfg) {
+    await mcp.callTool("Google Drive", "read_file_content", { fileId: cfg.fileId });
+    return "AI Roadmap sheet — fetched OK";
+  }
+
+  const SOURCE_CHECKS = {
+    asana: checkAsana,
+    jira: checkJira,
+    confluence: checkConfluence,
+    hubspot: checkHubspot,
+    sheets: checkSheets,
+  };
+
+  async function runRefresh() {
+    const btn = document.getElementById("refresh-btn");
+    const label = document.getElementById("refresh-btn-label");
+    const status = document.getElementById("refresh-status");
+    const configuredSources = Object.keys(LIVE_SOURCES);
+
+    btn.disabled = true;
+    btn.classList.add("spinning");
+    label.textContent = "Checking sources…";
+    status.innerHTML = "";
+
+    if (configuredSources.length === 0) {
+      status.textContent = "No live sources are configured yet (see .env.example) — showing the last scheduled refresh only.";
+      btn.disabled = false;
+      btn.classList.remove("spinning");
+      label.textContent = "Refresh from sources";
+      return;
+    }
+
+    const mcp = (typeof claude !== "undefined" && claude.use) ? await claude.use("mcp") : null;
+    if (!mcp) {
+      status.textContent = "Live refresh isn't available in this view — open this as a Claude artifact with connector access granted to Asana/Atlassian/HubSpot/Google Drive.";
+      btn.disabled = false;
+      btn.classList.remove("spinning");
+      label.textContent = "Refresh from sources";
+      return;
+    }
+
+    const results = await Promise.all(configuredSources.map(async (key) => {
+      try {
+        return await SOURCE_CHECKS[key](mcp, LIVE_SOURCES[key]);
+      } catch (err) {
+        return `${key} — couldn't refresh (${err?.message || "unknown error"})`;
+      }
+    }));
+
+    const allNotConfigured = ["jira", "confluence", "hubspot", "sheets"].filter(k => !LIVE_SOURCES[k]);
+    const notConfiguredNote = allNotConfigured.length
+      ? `<li style="opacity:0.7;">Not configured yet: ${allNotConfigured.join(", ")}</li>`
+      : "";
+
+    status.innerHTML = `<strong>Live check at ${new Date().toLocaleTimeString()}:</strong><ul>${results.map(r => `<li>${r}</li>`).join("")}${notConfiguredNote}</ul>`;
+
+    btn.disabled = false;
+    btn.classList.remove("spinning");
+    label.textContent = "Refresh from sources";
+  }
+
+  document.getElementById("refresh-btn").addEventListener("click", runRefresh);
 </script>
 
 </body>

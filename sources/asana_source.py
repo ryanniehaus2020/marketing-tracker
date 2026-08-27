@@ -25,16 +25,19 @@ from .base import NormalizedTask, require_env
 ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
 # Map a human-readable board name -> its Asana project gid.
-# Fill these in once you have real access. Milestone 1 only needs the
-# Growth-team boards populated; leave the rest blank until you extend.
+# Resolved 2026-08-27 against the real Degreed Asana workspace (gid
+# 1199943304774115) by name search. "Website Roadmap" and Lisa Harding's
+# personal board didn't turn up an exact-name match -- see the blank
+# entries below and the candidates noted next to them; confirm the right
+# board with Lisa/the team before filling those in.
 PROJECT_GIDS = {
-    "Web Marketing Requests": "",
-    "Website Roadmap": "",
-    "Lisa — This Week": "",  # Lisa Harding's personal to-do board
-    "Email & Automation Management": "",
-    "Content Calendar": "",  # Content & Brand
-    "All Creative Projects": "",  # Content & Brand
-    "Event Projects": "",  # Events
+    "Web Marketing Requests": "1202966122105252",
+    "Website Roadmap": "",  # not found by name search -- may live under a different name/team
+    "Lisa — This Week": "",  # Lisa Harding's personal to-do board -- candidates: "Lisa's ToDo List" (1214405005428544), "Lisa To Do's" (1217792928253659)
+    "Email & Automation Management": "1200025860801880",
+    "Content Calendar": "1203158713461129",  # Content & Brand
+    "All Creative Projects": "1200519962061957",  # Content & Brand
+    "Event Projects": "1201483003070040",  # Events -- other similarly-named boards exist: "Events & Communications Projects" (1200160052714843), "Event Projects (2020 + 2021)" (1200155527155377), "Event Projects (2019 + 2018)" (1200161586211355)
 }
 
 TASK_FIELDS = "name,completed,due_on,assignee.name,memberships.project.name,permalink_url"

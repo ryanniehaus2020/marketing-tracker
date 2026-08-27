@@ -28,9 +28,18 @@ doesn't change between runs. Edit a value in `sources/asana_source.py`'s
 ## Wiring up real data
 
 Copy `.env.example` to `.env` and fill in credentials one source at a
-time, per the milestone plan below. Each `sources/*.py` module has setup
-notes in its docstring. Run with `--sources asana` (etc.) to test one
-source in isolation before enabling the rest.
+time, per the milestone plan below. The non-secret identifiers (workspace
+gids, project keys, page/space/sheet IDs) are already filled in from a
+2026-08-27 lookup against the real Degreed accounts -- see the comments
+in `.env.example` for what was resolved automatically vs. what still
+needs manual confirmation (notably: no exact match found for "Website
+Roadmap" or Lisa Harding's personal board in Asana, and the HubSpot
+connection needs reauthorization before `MARKETING_EMAIL` data is
+readable). You still need to supply the actual secrets (API
+tokens/keys) yourself -- those are never something this repo stores.
+Each `sources/*.py` module has setup notes in its docstring. Run with
+`--sources asana` (etc.) to test one source in isolation before
+enabling the rest.
 
 ```bash
 cp .env.example .env
@@ -97,7 +106,14 @@ python3 main.py --sources asana
   type tags, collapsible team sections) from the filtered data. The
   initiatives section keeps client-side JS to bucket activities into
   "this week / coming weeks / completed," same as the original
-  artifact.
+  artifact. The header also has a "Refresh from sources" button --
+  when this HTML is published as a Claude artifact with mcp connector
+  access granted (Asana/Atlassian/HubSpot/Google Drive), it does a live
+  spot-check against whichever sources have identifiers configured (see
+  `.env.example`) and reports counts in the header. It's a freshness
+  check only, not a re-run of the pipeline -- it doesn't re-apply
+  `rules.py`'s dedup/RACI/window logic, so the team tables below still
+  reflect the last scheduled `main.py` run.
 - **`main.py`** -- orchestrates pull -> filter -> diff -> render ->
   write, one source at a time so a source without credentials yet
   doesn't crash the whole run.
