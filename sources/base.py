@@ -15,7 +15,7 @@ and each dict must have exactly this shape:
         "status": str,               # raw status string, e.g. "In Progress"
         "owner": str | None,         # literal source-tool assignee, pre-RACI-override
         "due_date": str | None,      # ISO "YYYY-MM-DD" or None
-        "source": str,               # "asana" | "jira" | "confluence" | "hubspot" | "sheets"
+        "source": str,               # "asana" | "jira" | "confluence" | "hubspot" | "sheets" | "website_roadmap"
         "source_url": str | None,
     }
 

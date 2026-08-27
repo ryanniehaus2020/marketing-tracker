@@ -19,7 +19,14 @@ import diff
 import rules
 from render import render
 from config.roster import TEAMS
-from sources import asana_source, jira_source, confluence_source, hubspot_source, sheets_source
+from sources import (
+    asana_source,
+    jira_source,
+    confluence_source,
+    hubspot_source,
+    sheets_source,
+    website_roadmap_source,
+)
 
 SOURCE_MODULES = {
     "asana": asana_source,
@@ -27,6 +34,7 @@ SOURCE_MODULES = {
     "confluence": confluence_source,
     "hubspot": hubspot_source,
     "sheets": sheets_source,
+    "website_roadmap": website_roadmap_source,
 }
 
 

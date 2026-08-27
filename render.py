@@ -21,6 +21,7 @@ from sources.asana_source import PROJECT_GIDS as ASANA_PROJECT_GIDS
 STATUS_BADGE_STYLES = {
     "queue": ("#eef0f4", "#5b6472"),
     "backlog": ("#f1f1f4", "#5b6472"),
+    "planned": ("#f1eafe", "#6b46c1"),
     "in progress": ("#e8f0fd", "#1f5fbf"),
     "this week": ("#e8f0fd", "#1f5fbf"),
     "waiting on others": ("#e8f0fd", "#1f5fbf"),

@@ -304,11 +304,12 @@
   }
 
   async function checkWebsiteRoadmap(mcp, cfg) {
-    // This doc is an unstructured bulleted list grouped by month, not a
-    // table -- no source module parses it into tasks yet. This is just a
-    // reachability check, same as the Confluence one above.
+    // This is a reachability check only, same as the Confluence one above
+    // -- the actual month-heading parsing into tasks (due date = last day
+    // of the month, owner Dafne Delgado, status In Progress/Planned/Done)
+    // happens server-side in website_roadmap_source.py, not here.
     await mcp.callTool("Google Drive", "read_file_content", { fileId: cfg.fileId });
-    return "Website Roadmap doc — fetched OK (not yet parsed into tasks)";
+    return "Website Roadmap doc — fetched OK";
   }
 
   const SOURCE_CHECKS = {

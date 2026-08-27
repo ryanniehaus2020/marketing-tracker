@@ -3,6 +3,7 @@ python-dotenv>=1.0
 requests>=2.31
 PyYAML>=6.0
 
-# Only needed once you wire up the AI Roadmap sheet source:
+# Only needed once you wire up the AI Roadmap sheet or Website Roadmap
+# doc sources:
 # google-api-python-client>=2.100
 # google-auth>=2.23

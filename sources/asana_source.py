@@ -1,9 +1,10 @@
 """
 Asana source -- Milestone 1 target.
 
-Feeds: Growth team tasks (Web Marketing Requests, Website Roadmap, Lisa
-Harding's personal to-do boards, Email & Automation Management), plus
-Content & Brand and Events boards once you extend PROJECT_GIDS below.
+Feeds: Growth team tasks (Web Marketing Requests, Lisa Harding's
+personal to-do board, Email & Automation Management), plus Content &
+Brand and Events boards once you extend PROJECT_GIDS below. "Website
+Roadmap" is NOT here -- see the note below.
 
 Real API docs: https://developers.asana.com/reference/rest-api-reference
 
@@ -33,8 +34,8 @@ ASANA_API_BASE = "https://app.asana.com/api/1.0"
 # 16MTqGAve79Ij4CIBuEHjKZVu2kuHUfk1rfT-YMPvlCU, Summary tab), an
 # unstructured bulleted list grouped by month with no owner/status/
 # due-date fields. It's intentionally NOT in this dict -- see
-# sources/website_roadmap_source.py (not yet built; needs its own
-# parsing design, same as confluence_source.py needed for its table).
+# sources/website_roadmap_source.py, which derives those three fields
+# instead of reading them.
 PROJECT_GIDS = {
     "Web Marketing Requests": "1202966122105252",
     "Lisa To Do's": "1217792928253659",  # Lisa Harding's personal to-do board (was guessed as "Lisa — This Week")
