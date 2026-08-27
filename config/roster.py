@@ -175,6 +175,15 @@ ASANA_PORTFOLIO_GIDS = {
     "Content Marketing": "1212892150691924",
 }
 
+# Campaign projects living inside a portfolio above. The portfolio-membership
+# fetch (get_items_for_portfolio) surfaces these for dedup priority, but their
+# own tasks still have to be pulled directly -- they don't otherwise appear
+# under any of the team boards in ASANA_PROJECT_GIDS.
+ASANA_CAMPAIGN_PROJECT_GIDS = {
+    "Degreed Agents_Product Launch_0926": "1217876918438817",  # verified 2026-08-27: only unpopulated task templates so far; this is where Degreed.ai Product Launch task management is moving
+    "Workday_ABM Campaign_0826": "1217291381876379",
+}
+
 JIRA_PMM_PROJECT_KEY = "PMM"
 ATLASSIAN_CLOUD_ID = "151636d7-9099-4803-a108-4f053f36c9fe"
 CONFLUENCE_MARKETING_OPS_ROADMAP_PAGE_ID = "8566735021"  # MAR space
