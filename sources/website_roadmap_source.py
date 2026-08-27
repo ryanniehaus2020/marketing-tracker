@@ -18,9 +18,10 @@ three fields are derived rather than read directly, per the source doc:
     inventing a value -- see the AI Roadmap sheet's due-date gap).
   - owner: always "Dafne Delgado" -- the doc has no per-item owner field.
   - status: "In Progress" if the item's month is the current month,
-    "Planned" if it's a future month, "Backlog" for Parking Lot items.
-    Past months are marked "Done" -- an assumption, since the doc doesn't
-    actually track completion; flag it if that turns out to be wrong.
+    "Planned" if it's a future month, "Done" for a past month, "Backlog"
+    for Parking Lot items. Confirmed with the team 2026-08-27: nothing
+    incomplete is left in a past month, so a past-month item is safe to
+    treat as Done without a separate completion marker.
 
 Parsing works against the doc's markdown export (Drive's
 `files.export` with mimeType `text/markdown`), which is what turns
@@ -60,7 +61,7 @@ def _status_for_month(month_num: int, year: int, today: date) -> str:
         return "In Progress"
     if target > this:
         return "Planned"
-    return "Done"  # assumption -- the doc doesn't mark completion explicitly
+    return "Done"  # confirmed 2026-08-27 -- past months are never left incomplete
 
 
 def _parse_roadmap_doc(text: str, doc_url: str, today: date | None = None) -> list[dict]:
