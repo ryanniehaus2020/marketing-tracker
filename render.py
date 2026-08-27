@@ -79,6 +79,10 @@ def build_live_sources_config() -> dict:
     if sheet_id:
         sources["sheets"] = {"fileId": sheet_id}
 
+    website_roadmap_doc_id = os.environ.get("WEBSITE_ROADMAP_DOC_ID")
+    if website_roadmap_doc_id:
+        sources["websiteRoadmap"] = {"fileId": website_roadmap_doc_id}
+
     return sources
 
 

@@ -26,14 +26,18 @@ ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
 # Map a human-readable board name -> its Asana project gid.
 # Resolved 2026-08-27 against the real Degreed Asana workspace (gid
-# 1199943304774115) by name search. "Website Roadmap" and Lisa Harding's
-# personal board didn't turn up an exact-name match -- see the blank
-# entries below and the candidates noted next to them; confirm the right
-# board with Lisa/the team before filling those in.
+# 1199943304774115) by name search, confirmed against the team 2026-08-27.
+#
+# NOTE: "Website Roadmap" was never an Asana board -- it's a Google Doc
+# ("Website Fixes & Improvements - Roadmap", id
+# 16MTqGAve79Ij4CIBuEHjKZVu2kuHUfk1rfT-YMPvlCU, Summary tab), an
+# unstructured bulleted list grouped by month with no owner/status/
+# due-date fields. It's intentionally NOT in this dict -- see
+# sources/website_roadmap_source.py (not yet built; needs its own
+# parsing design, same as confluence_source.py needed for its table).
 PROJECT_GIDS = {
     "Web Marketing Requests": "1202966122105252",
-    "Website Roadmap": "",  # not found by name search -- may live under a different name/team
-    "Lisa — This Week": "",  # Lisa Harding's personal to-do board -- candidates: "Lisa's ToDo List" (1214405005428544), "Lisa To Do's" (1217792928253659)
+    "Lisa To Do's": "1217792928253659",  # Lisa Harding's personal to-do board (was guessed as "Lisa — This Week")
     "Email & Automation Management": "1200025860801880",
     "Content Calendar": "1203158713461129",  # Content & Brand
     "All Creative Projects": "1200519962061957",  # Content & Brand

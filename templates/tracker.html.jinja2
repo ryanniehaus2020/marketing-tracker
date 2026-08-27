@@ -303,12 +303,21 @@
     return "AI Roadmap sheet — fetched OK";
   }
 
+  async function checkWebsiteRoadmap(mcp, cfg) {
+    // This doc is an unstructured bulleted list grouped by month, not a
+    // table -- no source module parses it into tasks yet. This is just a
+    // reachability check, same as the Confluence one above.
+    await mcp.callTool("Google Drive", "read_file_content", { fileId: cfg.fileId });
+    return "Website Roadmap doc — fetched OK (not yet parsed into tasks)";
+  }
+
   const SOURCE_CHECKS = {
     asana: checkAsana,
     jira: checkJira,
     confluence: checkConfluence,
     hubspot: checkHubspot,
     sheets: checkSheets,
+    websiteRoadmap: checkWebsiteRoadmap,
   };
 
   async function runRefresh() {
@@ -347,7 +356,7 @@
       }
     }));
 
-    const allNotConfigured = ["jira", "confluence", "hubspot", "sheets"].filter(k => !LIVE_SOURCES[k]);
+    const allNotConfigured = ["jira", "confluence", "hubspot", "sheets", "websiteRoadmap"].filter(k => !LIVE_SOURCES[k]);
     const notConfiguredNote = allNotConfigured.length
       ? `<li style="opacity:0.7;">Not configured yet: ${allNotConfigured.join(", ")}</li>`
       : "";
