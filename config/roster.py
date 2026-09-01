@@ -180,7 +180,7 @@ ASANA_PORTFOLIO_GIDS = {
 # own tasks still have to be pulled directly -- they don't otherwise appear
 # under any of the team boards in ASANA_PROJECT_GIDS.
 ASANA_CAMPAIGN_PROJECT_GIDS = {
-    "Degreed Agents_Product Launch_0926": "1217876918438817",  # verified 2026-08-27: only unpopulated task templates so far; this is where Degreed.ai Product Launch task management is moving
+    "Degreed.ai_Product Launch_0926": "1217876918438817",  # renamed in Asana 2026-09-01 (was "Degreed Agents_Product Launch_0926"); same gid, now has real dated tasks
     "Workday_ABM Campaign_0826": "1217291381876379",
 }
 
