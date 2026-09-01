@@ -45,12 +45,22 @@ def status_badge_colors(status: str | None) -> tuple[str, str]:
     return STATUS_BADGE_STYLES.get(status.strip().lower(), STATUS_BADGE_STYLES["queue"])
 
 
+def _task_table_json(task_table: list[dict], team_order: list[str]) -> str:
+    """Annotate each row with its precomputed status-pill colors (so the
+    client-side sortable/filterable table doesn't need to reimplement
+    STATUS_BADGE_STYLES in JS) and dump to JSON for the template's script."""
+    rows = []
+    for task in task_table:
+        bg, fg = status_badge_colors(task.get("status"))
+        rows.append({**task, "status_bg": bg, "status_fg": fg})
+    return json.dumps({"rows": rows, "team_order": team_order})
+
+
 def render(
     processed: dict,
     initiatives: list[dict],
     scope_notes: list[str],
     team_order: list[str],
-    team_open_by_default: dict[str, bool],
     template_dir: str = "templates",
     template_name: str = "tracker.html.jinja2",
 ) -> str:
@@ -63,9 +73,7 @@ def render(
         last_refreshed=now.strftime("%B %-d, %Y at %-I:%M %p"),
         window_label="Next 7 days",
         cadence_label="Refreshed daily",
-        teams=processed["teams"],
-        team_order=team_order,
-        team_open_by_default=team_open_by_default,
+        task_table_json=_task_table_json(processed["task_table"], team_order),
         initiatives=initiatives,
         initiatives_json=json.dumps(initiatives),
         scope_notes=scope_notes,

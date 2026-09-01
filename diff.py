@@ -26,11 +26,15 @@ def load_snapshot(snapshot_dir: str, day: date) -> dict | None:
 
 
 def load_previous_snapshot(snapshot_dir: str, today: date | None = None) -> dict | None:
-    """Loads yesterday's snapshot. If yesterday's run didn't happen for
-    some reason, walks back up to 7 days to find the most recent one --
-    better a slightly-stale diff than none at all."""
+    """Loads the most recent snapshot to diff against. Checks today's own
+    file first -- if main.py already ran once today (a same-day rerun
+    after fixing a source, or the manual "run it twice" check in the
+    README), diff against that rather than reporting "first run" every
+    time. Otherwise walks back up to 7 days to find yesterday's (or the
+    most recent prior) snapshot -- better a slightly-stale diff than
+    none at all."""
     today = today or date.today()
-    for days_back in range(1, 8):
+    for days_back in range(0, 8):
         snap = load_snapshot(snapshot_dir, today - timedelta(days=days_back))
         if snap is not None:
             return snap
@@ -59,8 +63,23 @@ def generate_scope_notes(today_processed: dict, previous_processed: dict | None)
         notes.append("First run -- no prior snapshot to diff against yet.")
         return notes
 
-    today_by_key = {_task_key(t): t for team in today_processed["teams"].values() for t in team if not t.get("is_empty_state")}
-    prev_by_key = {_task_key(t): t for team in previous_processed["teams"].values() for t in team if not t.get("is_empty_state")}
+    # HubSpot tasks are excluded here -- that section already only shows
+    # items new since the last refresh (rules.filter_hubspot_new_only), so
+    # every HubSpot item is *expected* to disappear on the following
+    # refresh. Diffing it too would relabel that by-design behavior as a
+    # bogus "dropped out, check manually" note every single day.
+    today_by_key = {
+        _task_key(t): t
+        for team in today_processed["teams"].values()
+        for t in team
+        if not t.get("is_empty_state") and t.get("source") != "hubspot"
+    }
+    prev_by_key = {
+        _task_key(t): t
+        for team in previous_processed["teams"].values()
+        for t in team
+        if not t.get("is_empty_state") and t.get("source") != "hubspot"
+    }
 
     new_keys = set(today_by_key) - set(prev_by_key)
     dropped_keys = set(prev_by_key) - set(today_by_key)
