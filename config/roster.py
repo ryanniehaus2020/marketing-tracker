@@ -21,7 +21,7 @@ TEAMS = {
             "Camila Santos",
             "Lisa Harding",
             "Luke Derderian",
-            "Tilda Persson",
+            "Tilda-Maria Persson",
         ],
         "default_open": True,
     },

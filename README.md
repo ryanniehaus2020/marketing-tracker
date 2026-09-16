@@ -113,6 +113,13 @@ vanishes. Don't "fix" them without checking with the team first:
 - Jira PMM issues without near-term due dates should eventually be
   summarized as a count rather than listed individually once volume
   gets high (not yet implemented -- currently listed individually).
-- Lisa Harding's personal Asana list, Tilda Persson, and Diana Corredin
-  are worth periodically checking to confirm they're not missing a
-  connected board entirely, rather than genuinely having no work.
+- Lisa Harding's personal Asana list and Diana Corredin are worth
+  periodically checking to confirm they're not missing a connected
+  board entirely, rather than genuinely having no work. Tilda's board
+  is now wired up (`config/roster.py` roster entry corrected to her
+  real Asana name, "Tilda-Maria Persson"; her "Tilda's To Do" project
+  is in `sources/asana_source.py`'s `PROJECT_GIDS`).
+- Some Asana assignees show a short/partial name (e.g. "Caroline" for
+  Caroline McCausland) rather than their full roster name -- those
+  tasks fall into "Unassigned / needs review" until the roster or a
+  RACI override accounts for the short form.

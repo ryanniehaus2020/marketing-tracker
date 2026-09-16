@@ -4,44 +4,62 @@
 # render time -- you don't need to bucket these yourself.
 #
 # type must be one of: SOCIAL, EMAIL, BLOG, NEWSLETTER, WEBSITE, PR, CLIP, EVENT
+#
+# Display order below = render order (top priority first). Marketing
+# Website Relaunch and Degreed.ai Product Launch pull their activities
+# straight from each project's "Launch Dates" section in Asana -- refresh
+# those two lists from Asana rather than hand-editing them.
 
 initiatives:
-  - id: ai-powered-revolution
-    name: "AI-Powered Revolution"
-    key_date: "3-part webinar series"
+  - id: marketing-website-relaunch
+    name: "Marketing Website Relaunch"
+    key_date: "Launch Dates TBD"
     links:
-      - label: "Comms plan"
-        url: "https://docs.google.com/document/d/REPLACE_ME"
-    note: "Dates not locked yet"
-    activities:
-      - date: "2026-09-02"
-        type: EMAIL
-        what: "Webinar 1 invite send"
-        owner: "Luke Derderian"
-      - date: "2026-09-09"
-        type: SOCIAL
-        what: "Webinar 1 promo post"
-        owner: "Dafne Delgado"
+      - label: "Asana project"
+        url: "https://app.asana.com/1/1199943304774115/project/1218474792086131"
+    note: "Pulled from the project's Launch Dates section in Asana -- that section has no tasks in it yet, so nothing shows here until the team schedules launch-date tasks."
+    activities: []
 
   - id: degreed-ai-product-launch
     name: "Degreed.ai Product Launch"
     key_date: "GA Oct 6, 2026"
     links:
-      - label: "Messaging doc"
-        url: "https://docs.google.com/document/d/REPLACE_ME"
+      - label: "Asana project"
+        url: "https://app.asana.com/1/1199943304774115/project/1217876918438817"
+    note: "Pulled from the project's Launch Dates section in Asana."
     activities:
-      - date: "2026-09-29"
-        type: BLOG
-        what: "Launch blog post goes live"
+      - date: "2026-09-10"
+        type: SOCIAL
+        what: "Degreed AI LinkedIn Message Ad (Vision Invite)"
+        owner: "Lisa Harding"
+      - date: "2026-09-16"
+        type: SOCIAL
+        what: "Degreed AI Thought Leadership Ads"
+        owner: "Donna Saggione"
+      - date: "2026-09-18"
+        type: WEBSITE
+        what: "Degreed AI Website Live"
+        owner: "Dafne Delgado"
+      - date: "2026-09-24"
+        type: WEBSITE
+        what: "degreed.com Homepage Relaunch Live"
+        owner: "Dafne Delgado"
+      - date: "2026-10-06"
+        type: SOCIAL
+        what: "Degreed AI Social Post #1"
         owner: "Emily Gerson"
       - date: "2026-10-06"
         type: PR
-        what: "Press release distribution"
-        owner: "Caroline McCausland"
+        what: "Degreed AI PR Announcement"
+        owner: "Caroline"
       - date: "2026-10-06"
-        type: WEBSITE
-        what: "Product page goes live"
-        owner: "Dafne Delgado"
+        type: EMAIL
+        what: "INV: 10/6 Vision Invite (Degreed AI Launch) - Prospects"
+        owner: "Luke Derderian"
+      - date: "2026-10-06"
+        type: EMAIL
+        what: "INV: 10/6 Vision Invite (Degreed AI Launch) - Clients"
+        owner: "Luke Derderian"
 
   - id: vision-2026
     name: "Vision 2026"
@@ -67,3 +85,20 @@ initiatives:
         type: CLIP
         what: "Post-event recap video"
         owner: "Vinni Chu"
+
+  - id: ai-powered-revolution
+    name: "AI-Powered Revolution"
+    key_date: "3-part webinar series"
+    links:
+      - label: "Comms plan"
+        url: "https://docs.google.com/document/d/REPLACE_ME"
+    note: "Dates not locked yet. Lowest priority -- shown last."
+    activities:
+      - date: "2026-09-02"
+        type: EMAIL
+        what: "Webinar 1 invite send"
+        owner: "Luke Derderian"
+      - date: "2026-09-09"
+        type: SOCIAL
+        what: "Webinar 1 promo post"
+        owner: "Dafne Delgado"

@@ -35,6 +35,17 @@ PROJECT_GIDS = {
     "Content Calendar": "",  # Content & Brand
     "All Creative Projects": "",  # Content & Brand
     "Event Projects": "",  # Events
+    "Tilda's To Do": "1218087971771775",  # Tilda-Maria Persson's personal to-do board
+    # FY27 Marketing Initiatives portfolio (gid 1213726795315426) -- every
+    # project in that portfolio, so all of it surfaces in the task table.
+    "Marketing Website Relaunch": "1218474792086131",
+    "Degreed.ai Product Launch": "1217876918438817",
+    "Workday ABM Campaign": "1217291381876379",
+    "Brand Awareness Campaign": "1216637817247732",
+    "$10M Sprint ABM Campaign": "1214242756275359",
+    "SAP Campaign [FY27]": "1213888096739747",
+    "AI Fluency IT Campaign": "1213726785828573",
+    "Winback/Closed Lost Opps Campaign": "1218504958548272",
 }
 
 TASK_FIELDS = "name,completed,due_on,assignee.name,memberships.project.name,permalink_url"
