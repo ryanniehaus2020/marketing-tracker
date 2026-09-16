@@ -13,12 +13,36 @@
 initiatives:
   - id: marketing-website-relaunch
     name: "Marketing Website Relaunch"
-    key_date: "Launch Dates TBD"
+    key_date: "Go-live Sep 24, 2026 (Demo Request page Oct 30)"
     links:
       - label: "Asana project"
         url: "https://app.asana.com/1/1199943304774115/project/1218474792086131"
-    note: "Pulled from the project's Launch Dates section in Asana -- that section has no tasks in it yet, so nothing shows here until the team schedules launch-date tasks."
-    activities: []
+    note: "Pulled from the project's Launch Dates section in Asana. None of these tasks have an owner assigned in Asana yet."
+    activities:
+      - date: "2026-09-24"
+        type: WEBSITE
+        what: "Homepage go live"
+        owner: "Unassigned"
+      - date: "2026-09-24"
+        type: WEBSITE
+        what: "For Individuals Page go live"
+        owner: "Unassigned"
+      - date: "2026-09-24"
+        type: WEBSITE
+        what: "Degreed.ai go live"
+        owner: "Unassigned"
+      - date: "2026-09-24"
+        type: WEBSITE
+        what: "Site Navigation go live"
+        owner: "Unassigned"
+      - date: "2026-09-24"
+        type: WEBSITE
+        what: "Subpage styling go live"
+        owner: "Unassigned"
+      - date: "2026-10-30"
+        type: WEBSITE
+        what: "Demo Request go live"
+        owner: "Unassigned"
 
   - id: degreed-ai-product-launch
     name: "Degreed.ai Product Launch"
@@ -51,7 +75,7 @@ initiatives:
       - date: "2026-10-06"
         type: PR
         what: "Degreed AI PR Announcement"
-        owner: "Caroline"
+        owner: "Caroline McCausland"
       - date: "2026-10-06"
         type: EMAIL
         what: "INV: 10/6 Vision Invite (Degreed AI Launch) - Prospects"

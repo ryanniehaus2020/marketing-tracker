@@ -35,6 +35,7 @@ TEAMS = {
             "Alec Hamilton",
             "Mike Zientara",
             "Diana Corredin",
+            "Joao Mostacada Carvalho",  # lead image creator/designer
         ],
         "default_open": True,
         "note": (
@@ -69,6 +70,8 @@ PERSON_TO_TEAM = {
 RACI_OWNER_OVERRIDES = {
     # (source, literal_assignee, project_tag_substring_or_None): real_owner
     ("asana", "Ryan Niehaus", "Web Marketing Requests"): "Dafne Delgado",
+    # "Caroline" is Asana's short first-name display for Caroline McCausland.
+    ("asana", "Caroline", None): "Caroline McCausland",
     # Add more as they're discovered, e.g.:
     # ("asana", "Camila Santos", "Localization needed for a success story"): "Camila Santos",
 }
