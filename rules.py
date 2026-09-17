@@ -17,6 +17,7 @@ from config.roster import (
     TEAMS,
     VISIBILITY_WINDOW_DAYS,
     apply_raci_override,
+    is_excluded_task,
 )
 
 
@@ -146,6 +147,9 @@ def process_all(raw_tasks: list[dict], previous_snapshot: dict | None = None) ->
 
     processed = []
     for task in other_tasks + hubspot_tasks:
+        if is_excluded_task(task.get("name") or ""):
+            continue
+
         t = dict(task)
         t["project_tag"] = resolve_project_tag(t.get("all_project_tags") or [])
         t = apply_owner_override(t)

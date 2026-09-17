@@ -121,3 +121,19 @@ ACTIVE_WORK_STATUSES = {
 }
 
 VISIBILITY_WINDOW_DAYS = 7
+
+# --- Personal / non-marketing task exclusions -----------------------------
+# Items that live on someone's personal Asana to-do board but aren't
+# marketing work -- HR self-review tasks, PTO reminders, etc. -- and
+# shouldn't surface on the shared tracker regardless of due date or status.
+# Match is case-insensitive substring against the task name. Add to this
+# list whenever someone asks not to have a personal item shown.
+EXCLUDED_TASK_NAME_SUBSTRINGS = [
+    "hibob",  # HR self-review / manager-review reminders (Lisa Harding, Sep 2026)
+]
+
+
+def is_excluded_task(name: str) -> bool:
+    """True if this task name matches a personal/non-marketing exclusion."""
+    lowered = (name or "").lower()
+    return any(substr in lowered for substr in EXCLUDED_TASK_NAME_SUBSTRINGS)
