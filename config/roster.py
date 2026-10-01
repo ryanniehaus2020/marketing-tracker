@@ -121,3 +121,24 @@ ACTIVE_WORK_STATUSES = {
 }
 
 VISIBILITY_WINDOW_DAYS = 7
+
+# --- Asana campaign projects ----------------------------------------------
+# Campaign projects (FY27 Marketing Initiatives portfolio) tracked as
+# campaigns. Display name -> Asana project gid. Add a project here only
+# after it has been approved in the daily QA review.
+ASANA_CAMPAIGN_PROJECT_GIDS = {
+    "Degreed.ai_Product Launch_0926": "1217876918438817",  # renamed 2026-09-01 (was "Degreed Agents_Product Launch_0926")
+    "Workday_ABM Campaign_0826": "1217291381876379",
+    "Marketing Website_Relaunch_0926": "1218474792086131",  # approved 2026-10-01
+    "Winback/Closed Lost Opps_Campaign_0926": "1218504958548272",  # approved 2026-10-01; Asana name is " Winback/Closed Lost Opps_Campaign_0926 [In Progress]"
+    "AI-Powered Revolution S3_Webinar_0926": "1218981087988039",  # approved 2026-10-01
+}
+
+# --- Asana "Progress" custom field -> tracker status -------------------------
+# Used for the Degreed.ai_Product Launch_0926 project's Status column.
+ASANA_PROGRESS_STATUS_MAP = {
+    "Not Started": "Queue",
+    "In Progress": "In Progress",
+    "Completed": "Complete",
+    "Running": "Live",  # approved 2026-10-01; "Live" is an active-work status
+}
