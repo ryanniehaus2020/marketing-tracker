@@ -179,11 +179,6 @@ ASANA_PORTFOLIO_GIDS = {
 # fetch (get_items_for_portfolio) surfaces these for dedup priority, but their
 # own tasks still have to be pulled directly -- they don't otherwise appear
 # under any of the team boards in ASANA_PROJECT_GIDS.
-ASANA_CAMPAIGN_PROJECT_GIDS = {
-    "Degreed.ai_Product Launch_0926": "1217876918438817",  # renamed in Asana 2026-09-01 (was "Degreed Agents_Product Launch_0926"); same gid, now has real dated tasks
-    "Workday_ABM Campaign_0826": "1217291381876379",
-}
-
 JIRA_PMM_PROJECT_KEY = "PMM"
 ATLASSIAN_CLOUD_ID = "151636d7-9099-4803-a108-4f053f36c9fe"
 CONFLUENCE_MARKETING_OPS_ROADMAP_PAGE_ID = "8566735021"  # MAR space
