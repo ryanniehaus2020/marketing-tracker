@@ -12,13 +12,14 @@ import argparse
 import os
 from datetime import date
 
+import requests
 import yaml
 from dotenv import load_dotenv
 
 import diff
 import rules
 from render import render
-from config.roster import TEAMS
+from config.roster import TEAMS, default_owner_for_channel
 from sources import asana_source, jira_source, confluence_source, hubspot_source, sheets_source
 
 SOURCE_MODULES = {
@@ -33,7 +34,17 @@ SOURCE_MODULES = {
 def load_initiatives(path: str = "config/initiatives.yaml") -> list[dict]:
     with open(path) as f:
         data = yaml.safe_load(f)
-    return data.get("initiatives", [])
+    initiatives = data.get("initiatives", [])
+    for initiative in initiatives:
+        for activity in initiative.get("activities", []):
+            # An explicit owner always wins; only fill the gap when one
+            # of the RACI-mapped channels (email/social/website/newsletter)
+            # was entered without an owner yet.
+            if not activity.get("owner"):
+                inferred = default_owner_for_channel(activity.get("type"))
+                if inferred:
+                    activity["owner"] = inferred
+    return initiatives
 
 
 def pull_all(mock: bool, only_sources: list[str] | None) -> list[dict]:
@@ -50,6 +61,12 @@ def pull_all(mock: bool, only_sources: list[str] | None) -> list[dict]:
             # rather than crashing the whole run. Milestone 1 only needs
             # Asana working; the rest will raise this until configured.
             print(f"[{name}] skipped: {exc}")
+        except requests.exceptions.RequestException as exc:
+            # A live source's own API hiccupped (timeout, 5xx, rate limit,
+            # bad auth) -- skip just that source rather than failing the
+            # whole day's refresh. Other sources' tasks still make it into
+            # the tracker; this one shows nothing new until the next run.
+            print(f"[{name}] skipped due to API error: {exc}")
     return tasks
 
 
@@ -75,21 +92,19 @@ def main():
 
     initiatives = load_initiatives()
     team_order = list(TEAMS.keys())
-    team_open_by_default = {name: cfg.get("default_open", False) for name, cfg in TEAMS.items()}
     # rules.process_all() may add an "Unassigned / needs review" bucket for
-    # tasks whose owner isn't on the roster -- append it if present so it
-    # still renders, rather than silently dropping those tasks from view.
+    # tasks whose owner isn't on the roster -- append it if present so its
+    # tasks still show up as a filterable "Team" value, rather than
+    # silently dropping those tasks from view.
     for extra_team in processed["teams"]:
         if extra_team not in team_order:
             team_order.append(extra_team)
-            team_open_by_default[extra_team] = True
 
     html = render(
         processed=processed,
         initiatives=initiatives,
         scope_notes=scope_notes,
         team_order=team_order,
-        team_open_by_default=team_open_by_default,
     )
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
