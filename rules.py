@@ -1,5 +1,5 @@
 """
-Business-rules layer: applies the 7-day/active-work visibility filter,
+Business-rules layer: applies the +/-7-day visibility filter,
 multi-board dedup, RACI owner overrides, sort order, and empty-state rows.
 
 This is the layer most likely to need tweaking as you validate output
@@ -10,7 +10,6 @@ modules (which should only ever normalize, never filter or judge).
 from datetime import date, datetime, timedelta
 
 from config.roster import (
-    ACTIVE_WORK_STATUSES,
     DEDUP_PRIORITY,
     PERSON_TO_TEAM,
     TEAMS,
@@ -80,7 +79,7 @@ def apply_owner_override(task: dict) -> dict:
 
 def is_missing_data(task: dict) -> tuple[bool, str | None]:
     """Returns (is_missing, context_note). A task is 'missing' if it has
-    no owner or no due date -- separate from the 7-day distance filter."""
+    no owner or no due date."""
     reasons = []
     if not task.get("owner"):
         reasons.append("no owner")
@@ -92,20 +91,16 @@ def is_missing_data(task: dict) -> tuple[bool, str | None]:
 
 
 def in_visibility_window(task: dict, today: date | None = None) -> bool:
-    """A task is shown if:
-      - due date falls within today -> today+7, OR
-      - status indicates active work (regardless of date distance), OR
-      - it has no due date at all (missing-data flag, not a distance filter)
-    Tasks that are far out AND not actively worked are omitted."""
+    """A task is shown only if its date is within +/- VISIBILITY_WINDOW_DAYS
+    of the pull date (today). The date is the due date, falling back to the
+    completed date when there is no due date. Status does not matter, and
+    old incomplete/overdue tasks and undated tasks are omitted."""
     today = today or date.today()
-    status = (task.get("status") or "").strip().lower()
-    due = _parse_date(task.get("due_date"))
-
-    if due is None:
-        return True  # missing-data case -- shown, flagged separately
-    if status in ACTIVE_WORK_STATUSES:
-        return True
-    return today <= due <= today + timedelta(days=VISIBILITY_WINDOW_DAYS)
+    when = _parse_date(task.get("due_date")) or _parse_date(task.get("completed_date"))
+    if when is None:
+        return False
+    window = timedelta(days=VISIBILITY_WINDOW_DAYS)
+    return today - window <= when <= today + window
 
 
 def is_overdue(task: dict, today: date | None = None) -> bool:

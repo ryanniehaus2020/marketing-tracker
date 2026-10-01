@@ -204,6 +204,7 @@ ACTIVE_WORK_STATUSES = {
     "waiting on others",
 }
 
+# Tasks are shown only if their date is within +/- this many days of the pull date.
 VISIBILITY_WINDOW_DAYS = 7
 
 # --- Asana campaign projects ----------------------------------------------
